@@ -117,7 +117,7 @@ if uploaded_file:
     st.write("")
 
     # ----------- START INTERVIEW -----------
-    if st.button(" Start Interview"):
+    if st.button("🚀 Start Interview", key="start_interview"):
 
         st.info("Interview started... Please use your microphone")
 
