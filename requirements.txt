@@ -1,6 +1,4 @@
 streamlit
-flask
-gunicorn
 reportlab
 pdfplumber
 docx2txt
@@ -10,6 +8,3 @@ Pillow
 scikit-learn
 nltk
 spacy
-SpeechRecognition
-pyttsx3
-pyaudio
