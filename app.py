@@ -4,26 +4,21 @@ from report_generator import generate_report
 from resume_parse import extract_resume_text, extract_skills_section, extract_projects_section
 from questions_generator import generate_questions
 from voice_utils import speak, listen
-from evaluater import evaluate_answers
+from evaluateo import evaluate_answers
 
-# ----------- PROFESSIONAL UI STYLE -----------
-
+# ----------- PAGE CONFIG -----------
 st.set_page_config(page_title="Viku Interviewer", page_icon="🎤", layout="centered")
 
+# ----------- SESSION STATE -----------
+if "started" not in st.session_state:
+    st.session_state.started = False
+
+# ----------- UI STYLE -----------
 st.markdown("""
 <style>
+body { background-color: #0f172a; }
+.block-container { padding-top: 2rem; }
 
-/* Background */
-body {
-    background-color: #0f172a;
-}
-
-/* Main container */
-.block-container {
-    padding-top: 2rem;
-}
-
-/* Title */
 .title {
     text-align: center;
     font-size: 42px;
@@ -31,7 +26,6 @@ body {
     color: #38bdf8;
 }
 
-/* Subtitle */
 .subtitle {
     text-align: center;
     color: #94a3b8;
@@ -39,7 +33,6 @@ body {
     margin-bottom: 30px;
 }
 
-/* Card */
 .card {
     background: #1e293b;
     padding: 25px;
@@ -47,7 +40,6 @@ body {
     box-shadow: 0px 0px 20px rgba(0,0,0,0.4);
 }
 
-/* Button */
 .stButton>button {
     width: 100%;
     background: linear-gradient(90deg, #38bdf8, #6366f1);
@@ -61,30 +53,18 @@ body {
 
 .stButton>button:hover {
     transform: scale(1.05);
-    background: linear-gradient(90deg, #6366f1, #38bdf8);
-}
-
-/* Upload box */
-.upload-box {
-    border: 2px dashed #38bdf8;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    color: #cbd5f5;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ----------- HEADER -----------
-
 st.markdown("<div class='title'>🎤 Viku Interview Assistant</div>", unsafe_allow_html=True)
 st.markdown("<div class='subtitle'>Smart Resume-Based AI Interview System</div>", unsafe_allow_html=True)
 
 st.write("")
 
-# ----------- CARD LAYOUT -----------
-
+# ----------- CARD -----------
 with st.container():
     st.markdown("<div class='card'>", unsafe_allow_html=True)
 
@@ -92,14 +72,14 @@ with st.container():
 
     st.write("")
 
-    start_btn = st.button(" Start Interview")
+    # ✅ FIXED BUTTON (ONLY ONE BUTTON WITH KEY)
+    start_btn = st.button("🚀 Start Interview", key="start_interview_btn")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------- MAIN LOGIC -----------
 
 if uploaded_file:
-
     st.success("✅ Resume uploaded successfully")
 
     resume_text = extract_resume_text(uploaded_file)
@@ -107,19 +87,18 @@ if uploaded_file:
     projects = extract_projects_section(resume_text)
 
     if skills_text == "":
-        st.error(" Skills section not detected in resume")
+        st.error("❌ Skills section not detected in resume")
         st.stop()
 
     questions = generate_questions(skills_text, projects)
-
     status = st.empty()
 
-    st.write("")
+    # -------- START BUTTON LOGIC --------
+    if start_btn:
+        st.session_state.started = True
 
-    # ----------- START INTERVIEW -----------
-    if st.button("🚀 Start Interview", key="start_interview"):
-
-        st.info("Interview started... Please use your microphone")
+    if st.session_state.started:
+        st.info("Interview started... Please use your microphone 🎤")
 
         answers = []
         asked_questions = []
@@ -161,7 +140,6 @@ if uploaded_file:
 
             speak(question)
             time.sleep(1)
-
             speak("You can answer now.")
 
             while True:
@@ -176,7 +154,7 @@ if uploaded_file:
                     speak("Please give a complete answer.")
                     continue
 
-                if "repeat" in answer:
+                if "repeat" in answer.lower():
                     speak("Repeating the question.")
                     speak(question)
                     continue
@@ -198,14 +176,14 @@ if uploaded_file:
         else:
             speak("Thank you for your time. You are not selected this time.")
 
-        st.success(f" Result: {result} ({percentage:.2f}%)")
+        st.success(f"✅ Result: {result} ({percentage:.2f}%)")
 
-        # -------- PDF --------
+        # -------- DOWNLOAD REPORT --------
         file = generate_report(asked_questions, answers)
 
         with open(file, "rb") as f:
             st.download_button(
-                " Download Interview Report",
+                "📥 Download Interview Report",
                 f,
                 file_name="Interview_Report.pdf"
             )
